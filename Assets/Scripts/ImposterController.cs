@@ -3,16 +3,17 @@ using UnityEngine;
 public class ImposterController : MonoBehaviour
 {
     [HideInInspector]
-    public Transform currentSpawnPoint; // Assigned by GameManager on spawn
+    public Transform currentSpawnPoint;
 
     private Renderer m_Renderer;
     private Camera mainCamera;
     
-    // The boolean required by your logic
     private bool readyToTeleport = false; 
-    
-    // To ensure he doesn't move before the game really starts
     private bool hasBeenSeenOnce = false; 
+
+    // LayerMask to ensure Raycast hits walls (Default) but ignores triggers/UI if needed
+    // You can set this in Inspector, or default to Everything
+    public LayerMask obstacleMask = -1; 
 
     void Start()
     {
@@ -20,9 +21,7 @@ public class ImposterController : MonoBehaviour
         mainCamera = Camera.main;
 
         if (m_Renderer == null)
-        {
-            Debug.LogError("Imposter needs a Renderer (MeshRenderer or SkinnedMeshRenderer) to detect visibility!");
-        }
+            Debug.LogError("Imposter needs a Renderer!");
     }
 
     void Update()
@@ -33,21 +32,16 @@ public class ImposterController : MonoBehaviour
 
         if (currentlyVisible)
         {
-            // 1. Player is looking at Imposter. 
-            // He freezes, but becomes "Charged" (ready) to teleport when looked away.
+            // Player sees Imposter clearly (in frame AND no walls)
             hasBeenSeenOnce = true;
             readyToTeleport = true; 
         }
         else
         {
-            // 2. Player is NOT looking.
-            // If we have been seen at least once, AND we are charged to teleport...
+            // Player is NOT looking
             if (hasBeenSeenOnce && readyToTeleport)
             {
                 Teleport();
-                
-                // IMPORTANT: We set this to false immediately.
-                // This ensures he teleports ONLY ONCE until looked at again.
                 readyToTeleport = false;
             }
         }
@@ -57,26 +51,41 @@ public class ImposterController : MonoBehaviour
     {
         if (GameManager.Instance == null) return;
 
-        // Ask GameManager for a valid spot and swap the lists
-        Transform newLocation = GameManager.Instance.GetNewTeleportSpot(currentSpawnPoint);
+        // Ask GameManager for a spot that is NOT currently visible
+        Transform newLocation = GameManager.Instance.GetHiddenTeleportSpot(currentSpawnPoint);
 
         if (newLocation != null)
         {
-            // Update physical position
             transform.position = newLocation.position;
-            
-            // Update our internal reference
             currentSpawnPoint = newLocation;
-            
-            Debug.Log("Imposter teleported!");
+            Debug.Log("Imposter teleported to a hidden spot!");
         }
     }
 
-    // Helper to strictly check if Main Camera sees the object
-    // (Renderer.isVisible can be buggy in Editor if Scene View is open)
     bool IsVisibleToCamera()
     {
+        // 1. Frustum Check (Is it within the camera angle?)
         Plane[] planes = GeometryUtility.CalculateFrustumPlanes(mainCamera);
-        return GeometryUtility.TestPlanesAABB(planes, m_Renderer.bounds);
+        if (!GeometryUtility.TestPlanesAABB(planes, m_Renderer.bounds))
+        {
+            return false; // Not in camera angle
+        }
+
+        // 2. Raycast Check (Is a wall blocking the view?)
+        // We cast a line from Camera to Imposter's center
+        RaycastHit hit;
+        Vector3 direction = m_Renderer.bounds.center - mainCamera.transform.position;
+        
+        if (Physics.Raycast(mainCamera.transform.position, direction, out hit, Mathf.Infinity, obstacleMask))
+        {
+            // If we hit something that is NOT the imposter (like a wall), he is hidden
+            // Note: Ensure the Imposter's collider is on the same object or child being hit
+            if (hit.transform.root != this.transform.root)
+            {
+                return false; // Blocked by wall
+            }
+        }
+
+        return true; // In angle and clear line of sight
     }
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance; // Singleton for easy access
+    public static GameManager Instance;
 
     [Header("Characters")]
     public GameObject npcPrefab;
@@ -12,7 +12,6 @@ public class GameManager : MonoBehaviour
     [Header("Spawn Settings")]
     public Transform spawnPointsParent;
 
-    // We store all points, and a separate list for the empty ones
     private List<Transform> allSpawnPoints = new List<Transform>();
     private List<Transform> emptySpawnPoints = new List<Transform>();
 
@@ -37,24 +36,22 @@ public class GameManager : MonoBehaviour
 
     void SpawnCharacters()
     {
-        // 1. Shuffle
         ShuffleSpawnPoints();
 
         int totalPoints = allSpawnPoints.Count;
         int npcCount = Mathf.Max(0, totalPoints - 4);
 
-        // 2. Spawn NPCs (They take the first batch of spots)
+        // Spawn NPCs
         for (int i = 0; i < npcCount; i++)
         {
             Instantiate(npcPrefab, allSpawnPoints[i].position, Quaternion.identity);
         }
 
-        // 3. Spawn Imposter (Takes the next spot)
+        // Spawn Imposter
         if (npcCount < totalPoints)
         {
             GameObject imposter = Instantiate(imposterPrefab, allSpawnPoints[npcCount].position, Quaternion.identity);
             
-            // Tell the imposter which spawn point he is currently standing on
             ImposterController controller = imposter.GetComponent<ImposterController>();
             if (controller != null) 
             {
@@ -62,30 +59,55 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // 4. Register Empty Spots (The rest of the list)
-        // We start loop from npcCount + 1 (because npcCount was the Imposter's spot)
+        // Register Empty Spots
         for (int i = npcCount + 1; i < totalPoints; i++)
         {
             emptySpawnPoints.Add(allSpawnPoints[i]);
         }
     }
 
-    // --- NEW PUBLIC METHOD FOR IMPOSTER ---
-    public Transform GetNewTeleportSpot(Transform currentSpotToFree)
+    // --- UPDATED METHOD ---
+    public Transform GetHiddenTeleportSpot(Transform currentSpotToFree)
     {
         if (emptySpawnPoints.Count == 0) return null;
 
-        // 1. Pick a random empty spot
-        int randomIndex = Random.Range(0, emptySpawnPoints.Count);
-        Transform newSpot = emptySpawnPoints[randomIndex];
+        Camera cam = Camera.main;
+        List<Transform> validHiddenSpots = new List<Transform>();
 
-        // 2. The Imposter's OLD spot is now empty, add it to the empty list
-        emptySpawnPoints.Add(currentSpotToFree);
+        // Filter: Find empty spots that are NOT currently visible
+        foreach(Transform spot in emptySpawnPoints)
+        {
+            if (!IsPointOnScreen(cam, spot.position))
+            {
+                validHiddenSpots.Add(spot);
+            }
+        }
 
-        // 3. The NEW spot is now taken, remove it from the empty list
-        emptySpawnPoints.RemoveAt(randomIndex);
+        // If no hidden spots exist (player looking at everything), stay put (return null)
+        if (validHiddenSpots.Count == 0) return null;
+
+        // Pick random from HIDDEN spots
+        int randomIndex = Random.Range(0, validHiddenSpots.Count);
+        Transform newSpot = validHiddenSpots[randomIndex];
+
+        // Manage the lists
+        emptySpawnPoints.Add(currentSpotToFree);       // Old spot is now empty
+        emptySpawnPoints.Remove(newSpot);              // New spot is now taken
 
         return newSpot;
+    }
+
+    // Helper to check if a specific world position is on screen
+    bool IsPointOnScreen(Camera cam, Vector3 worldPos)
+    {
+        Vector3 viewPos = cam.WorldToViewportPoint(worldPos);
+        
+        // Viewport coordinates: (0,0) is bottom-left, (1,1) is top-right.
+        // Z > 0 means it's in front of the camera, not behind.
+        bool onScreen = (viewPos.x > 0 && viewPos.x < 1 && 
+                         viewPos.y > 0 && viewPos.y < 1 && 
+                         viewPos.z > 0);
+        return onScreen;
     }
 
     void ShuffleSpawnPoints()
