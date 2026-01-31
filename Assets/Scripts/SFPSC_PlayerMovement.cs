@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
 public class SFPSC_PlayerMovement : MonoBehaviour
@@ -8,10 +6,13 @@ public class SFPSC_PlayerMovement : MonoBehaviour
     private Rigidbody rb;
     private bool enableMovement = true;
 
+    [Header("References")]
+    public Transform playerCamera; // Drag your Main Camera here in the Inspector
+
     [Header("Movement properties")]
     public float walkSpeed = 8.0f;
     public float runSpeed = 12.0f;
-    public float changeInStageSpeed = 10.0f; // Transition smoothness
+    public float changeInStageSpeed = 10.0f; 
     public float maximumPlayerSpeed = 150.0f;
     
     private float vInput, hInput;
@@ -20,44 +21,51 @@ public class SFPSC_PlayerMovement : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
-        // Constrain rotation so the player doesn't tip over
         rb.freezeRotation = true;
+
+        // Automatically try to find the camera if not assigned
+        if (playerCamera == null && Camera.main != null)
+        {
+            playerCamera = Camera.main.transform;
+        }
     }
 
     private void Update()
     {
         if (!enableMovement) return;
 
-        // 1. Capture Input every frame (Update is more responsive for input)
         vInput = Input.GetAxisRaw("Vertical");
         hInput = Input.GetAxisRaw("Horizontal");
 
-        // 2. Determine speed (Shift to run)
         float currentSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
 
-        // 3. Calculate direction based on where the player is facing
-        inputForce = (transform.forward * vInput + transform.right * hInput).normalized * currentSpeed;
+        // 1. Get camera directions
+        Vector3 camForward = playerCamera.forward;
+        Vector3 camRight = playerCamera.right;
+
+        // 2. Flatten directions (ignore Y) so player doesn't fly/sink when looking up/down
+        camForward.y = 0;
+        camRight.y = 0;
+        camForward.Normalize();
+        camRight.Normalize();
+
+        // 3. Calculate move direction relative to camera
+        inputForce = (camForward * vInput + camRight * hInput).normalized * currentSpeed;
     }
 
     private void FixedUpdate()
     {
-        // Apply the movement in FixedUpdate for consistent physics
         if (!enableMovement) return;
 
-        // Clamping overall velocity to the maximum allowed
-        rb.linearVelocity = ClampMag(rb.linearVelocity, maximumPlayerSpeed);
-
-        // Apply movement using Lerp for a smooth "weighty" feel
-        // We maintain the current Y velocity so gravity still works
+        // Apply movement while preserving gravity (Y velocity)
         Vector3 targetVelocity = new Vector3(inputForce.x, rb.linearVelocity.y, inputForce.z);
         rb.linearVelocity = Vector3.Lerp(rb.linearVelocity, targetVelocity, changeInStageSpeed * Time.fixedDeltaTime);
-    }
 
-    private static Vector3 ClampMag(Vector3 vec, float maxMag)
-    {
-        if (vec.sqrMagnitude > maxMag * maxMag)
-            vec = vec.normalized * maxMag;
-        return vec;
+        // Clamp speed
+        if (rb.linearVelocity.magnitude > maximumPlayerSpeed)
+        {
+            rb.linearVelocity = rb.linearVelocity.normalized * maximumPlayerSpeed;
+        }
     }
 
     public void EnableMovement() => enableMovement = true;
