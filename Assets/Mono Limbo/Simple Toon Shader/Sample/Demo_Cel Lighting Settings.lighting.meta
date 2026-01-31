@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 76d6f50568fc7ab46ba54c641026f6ff
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4890085278179872738
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 318465
+  packageName: "One-Click Toon Shader \u2013 Fast Stylized Rendering"
+  packageVersion: 1.5
+  assetPath: Assets/Mono Limbo/Simple Toon Shader/Sample/Demo_Cel Lighting Settings.lighting
+  uploadId: 823774
