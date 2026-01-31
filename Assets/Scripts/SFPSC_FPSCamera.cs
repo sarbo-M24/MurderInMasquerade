@@ -53,7 +53,7 @@ public class SFPSC_FPSCamera : MonoBehaviour
     private float rotX = 0.0f, rotY = 0.0f;
     [HideInInspector]
     public float rotZ = 0.0f;
-    private void FixedUpdate()
+    private void LateUpdate()
     {
         // Mouse input
         mouseX = Input.GetAxis("Mouse X") * sensitivity;
