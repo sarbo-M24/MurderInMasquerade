@@ -6,7 +6,8 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
 
     [Header("Characters")]
-    public GameObject npcPrefab;
+    [Tooltip("Drag NPC1, NPC2, and NPC3 here")]
+    public GameObject[] npcPrefabs; // CHANGED: Now an array of prefabs
     public GameObject imposterPrefab;
 
     [Header("Spawn Settings")]
@@ -36,18 +37,23 @@ public class GameManager : MonoBehaviour
 
     void SpawnCharacters()
     {
+        // 1. Shuffle locations
         ShuffleSpawnPoints();
 
         int totalPoints = allSpawnPoints.Count;
         int npcCount = Mathf.Max(0, totalPoints - 4);
 
-        // Spawn NPCs
+        // 2. Spawn Random NPCs
         for (int i = 0; i < npcCount; i++)
         {
-            Instantiate(npcPrefab, allSpawnPoints[i].position, Quaternion.identity);
+            // Pick a random prefab from the list of 3
+            int randomIndex = Random.Range(0, npcPrefabs.Length);
+            GameObject selectedPrefab = npcPrefabs[randomIndex];
+
+            Instantiate(selectedPrefab, allSpawnPoints[i].position, Quaternion.identity);
         }
 
-        // Spawn Imposter
+        // 3. Spawn Imposter
         if (npcCount < totalPoints)
         {
             GameObject imposter = Instantiate(imposterPrefab, allSpawnPoints[npcCount].position, Quaternion.identity);
@@ -59,14 +65,13 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // Register Empty Spots
+        // 4. Register Empty Spots
         for (int i = npcCount + 1; i < totalPoints; i++)
         {
             emptySpawnPoints.Add(allSpawnPoints[i]);
         }
     }
 
-    // --- UPDATED METHOD ---
     public Transform GetHiddenTeleportSpot(Transform currentSpotToFree)
     {
         if (emptySpawnPoints.Count == 0) return null;
@@ -83,27 +88,20 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // If no hidden spots exist (player looking at everything), stay put (return null)
         if (validHiddenSpots.Count == 0) return null;
 
-        // Pick random from HIDDEN spots
         int randomIndex = Random.Range(0, validHiddenSpots.Count);
         Transform newSpot = validHiddenSpots[randomIndex];
 
-        // Manage the lists
-        emptySpawnPoints.Add(currentSpotToFree);       // Old spot is now empty
-        emptySpawnPoints.Remove(newSpot);              // New spot is now taken
+        emptySpawnPoints.Add(currentSpotToFree);
+        emptySpawnPoints.Remove(newSpot);
 
         return newSpot;
     }
 
-    // Helper to check if a specific world position is on screen
     bool IsPointOnScreen(Camera cam, Vector3 worldPos)
     {
         Vector3 viewPos = cam.WorldToViewportPoint(worldPos);
-        
-        // Viewport coordinates: (0,0) is bottom-left, (1,1) is top-right.
-        // Z > 0 means it's in front of the camera, not behind.
         bool onScreen = (viewPos.x > 0 && viewPos.x < 1 && 
                          viewPos.y > 0 && viewPos.y < 1 && 
                          viewPos.z > 0);

@@ -53,7 +53,7 @@ public class SFPSC_FPSCamera : MonoBehaviour
     private float rotX = 0.0f, rotY = 0.0f;
     [HideInInspector]
     public float rotZ = 0.0f;
-    private void Update()
+    private void FixedUpdate()
     {
         // Mouse input
         mouseX = Input.GetAxis("Mouse X") * sensitivity;
@@ -70,7 +70,7 @@ public class SFPSC_FPSCamera : MonoBehaviour
         transform.position = CameraPosition.position;
     }
 
-    public void Shake(float magnitude, float duration)
+    /*public void Shake(float magnitude, float duration)
     {
         StartCoroutine(IShake(magnitude, duration));
     }
@@ -84,5 +84,5 @@ public class SFPSC_FPSCamera : MonoBehaviour
             yield return wfeof;
         }
         rotZ = 0.0f;
-    }
+    }*/
 }
