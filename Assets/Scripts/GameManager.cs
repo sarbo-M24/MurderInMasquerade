@@ -6,13 +6,12 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
 
     [Header("Characters")]
-    [Tooltip("Drag NPC1, NPC2, and NPC3 here")]
-    public GameObject[] npcPrefabs; // CHANGED: Now an array of prefabs
-    public GameObject imposterPrefab;
+    public GameObject imposterPrefab; // Keeps Imposter spawning
 
     [Header("Spawn Settings")]
     public Transform spawnPointsParent;
 
+    // We store all points to pick a start spot, then track empty ones
     private List<Transform> allSpawnPoints = new List<Transform>();
     private List<Transform> emptySpawnPoints = new List<Transform>();
 
@@ -24,7 +23,7 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         CollectSpawnPoints();
-        SpawnCharacters();
+        SpawnImposterOnly();
     }
 
     void CollectSpawnPoints()
@@ -35,43 +34,42 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void SpawnCharacters()
+    void SpawnImposterOnly()
     {
-        // 1. Shuffle locations
-        ShuffleSpawnPoints();
-
-        int totalPoints = allSpawnPoints.Count;
-        int npcCount = Mathf.Max(0, totalPoints - 4);
-
-        // 2. Spawn Random NPCs
-        for (int i = 0; i < npcCount; i++)
+        // Safety Check
+        if (allSpawnPoints.Count == 0)
         {
-            // Pick a random prefab from the list of 3
-            int randomIndex = Random.Range(0, npcPrefabs.Length);
-            GameObject selectedPrefab = npcPrefabs[randomIndex];
-
-            Instantiate(selectedPrefab, allSpawnPoints[i].position, Quaternion.identity);
+            Debug.LogError("No spawn points found in parent!");
+            return;
         }
 
-        // 3. Spawn Imposter
-        if (npcCount < totalPoints)
+        // 1. Shuffle or Pick Random Spot
+        // We pick a random index for the Imposter's start position
+        int startingIndex = Random.Range(0, allSpawnPoints.Count);
+        Transform startSpot = allSpawnPoints[startingIndex];
+
+        // 2. Spawn the Imposter
+        GameObject imposter = Instantiate(imposterPrefab, startSpot.position, Quaternion.identity);
+
+        // 3. Initialize Controller
+        ImposterController controller = imposter.GetComponent<ImposterController>();
+        if (controller != null)
         {
-            GameObject imposter = Instantiate(imposterPrefab, allSpawnPoints[npcCount].position, Quaternion.identity);
-            
-            ImposterController controller = imposter.GetComponent<ImposterController>();
-            if (controller != null) 
+            controller.currentSpawnPoint = startSpot;
+        }
+
+        // 4. Register the Rest as Empty
+        // Loop through all points. If it's NOT the start spot, it's empty.
+        for (int i = 0; i < allSpawnPoints.Count; i++)
+        {
+            if (i != startingIndex)
             {
-                controller.currentSpawnPoint = allSpawnPoints[npcCount];
+                emptySpawnPoints.Add(allSpawnPoints[i]);
             }
-        }
-
-        // 4. Register Empty Spots
-        for (int i = npcCount + 1; i < totalPoints; i++)
-        {
-            emptySpawnPoints.Add(allSpawnPoints[i]);
         }
     }
 
+    // --- TELEPORT LOGIC (Unchanged) ---
     public Transform GetHiddenTeleportSpot(Transform currentSpotToFree)
     {
         if (emptySpawnPoints.Count == 0) return null;
@@ -80,7 +78,7 @@ public class GameManager : MonoBehaviour
         List<Transform> validHiddenSpots = new List<Transform>();
 
         // Filter: Find empty spots that are NOT currently visible
-        foreach(Transform spot in emptySpawnPoints)
+        foreach (Transform spot in emptySpawnPoints)
         {
             if (!IsPointOnScreen(cam, spot.position))
             {
@@ -93,6 +91,7 @@ public class GameManager : MonoBehaviour
         int randomIndex = Random.Range(0, validHiddenSpots.Count);
         Transform newSpot = validHiddenSpots[randomIndex];
 
+        // Swap Logic
         emptySpawnPoints.Add(currentSpotToFree);
         emptySpawnPoints.Remove(newSpot);
 
@@ -102,20 +101,9 @@ public class GameManager : MonoBehaviour
     bool IsPointOnScreen(Camera cam, Vector3 worldPos)
     {
         Vector3 viewPos = cam.WorldToViewportPoint(worldPos);
-        bool onScreen = (viewPos.x > 0 && viewPos.x < 1 && 
-                         viewPos.y > 0 && viewPos.y < 1 && 
+        bool onScreen = (viewPos.x > 0 && viewPos.x < 1 &&
+                         viewPos.y > 0 && viewPos.y < 1 &&
                          viewPos.z > 0);
         return onScreen;
-    }
-
-    void ShuffleSpawnPoints()
-    {
-        for (int i = 0; i < allSpawnPoints.Count; i++)
-        {
-            Transform temp = allSpawnPoints[i];
-            int randomIndex = Random.Range(i, allSpawnPoints.Count);
-            allSpawnPoints[i] = allSpawnPoints[randomIndex];
-            allSpawnPoints[randomIndex] = temp;
-        }
     }
 }

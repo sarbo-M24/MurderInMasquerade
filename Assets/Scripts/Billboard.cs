@@ -1,30 +1,42 @@
 using UnityEngine;
 
-// 10000 ensures this runs AFTER Physics, Input, Camera, and Cinemachine
-[DefaultExecutionOrder(10000)]
 public class BillboardFX : MonoBehaviour
 {
-    private Camera mainCamera;
+    private Transform playerTransform;
 
     void Start()
     {
-        mainCamera = Camera.main;
+        // 1. Find the Player automatically by Tag
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        
+        if (playerObj != null)
+        {
+            playerTransform = playerObj.transform;
+        }
+        else
+        {
+            Debug.LogError("BillboardFX could not find an object tagged 'Player'!");
+        }
     }
 
     void LateUpdate()
     {
-        if (mainCamera == null) return;
+        if (playerTransform == null) return;
 
-        // 1. Get the direction the CAMERA is facing
-        Vector3 direction = mainCamera.transform.forward;
-        
-        // 2. Flatten it (remove Up/Down tilt) so NPC stays upright
-        direction.y = 0;
+        // 2. Calculate direction from NPC to Player
+        Vector3 directionToPlayer = playerTransform.position - transform.position;
 
-        // 3. Apply rotation (only if we have a valid direction)
-        if (direction.sqrMagnitude > 0.001f)
+        // 3. Lock the Y-axis (so they don't tilt up/down)
+        directionToPlayer.y = 0;
+
+        // 4. Rotate to face the player
+        if (directionToPlayer != Vector3.zero)
         {
-            transform.rotation = Quaternion.LookRotation(direction);
+            // Create the rotation looking at the player
+            Quaternion lookRotation = Quaternion.LookRotation(directionToPlayer);
+            
+            // Apply it
+            transform.rotation = lookRotation;
         }
     }
 }
