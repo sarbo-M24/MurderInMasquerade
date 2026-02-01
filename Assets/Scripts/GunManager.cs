@@ -89,11 +89,21 @@ public class GunManager : MonoBehaviour
     {
         hasTriggeredPhaseTwo = true;
 
-        // 1. Change the Imposter's Sprite
-        if (imposterRenderer != null && imposterNewSprite != null)
+        // Find the imposter dynamically
+        GameObject imposterObj = GameObject.FindGameObjectWithTag("Imposter");
+        if (imposterObj != null)
         {
-            imposterRenderer.sprite = imposterNewSprite;
-            Debug.Log("The Imposter has changed appearance!");
+            SpriteRenderer imposterRend = imposterObj.GetComponentInChildren<SpriteRenderer>();
+
+            if (imposterRend != null && imposterNewSprite != null)
+            {
+                imposterRend.sprite = imposterNewSprite;
+                Debug.Log("The Imposter has changed appearance!");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Imposter not found!");
         }
 
         // 2. Spawn a Random Mask
@@ -104,6 +114,7 @@ public class GunManager : MonoBehaviour
             Debug.Log("A random mask has appeared.");
         }
     }
+
 
     void StartTimer()
     {
