@@ -1,175 +1,43 @@
-﻿/*
-
-    ███████╗██╗██████╗  ██████╗████████╗  ██████╗ ███████╗██████╗  ██████╗ █████╗ ███╗  ██╗
-
-    ██╔════╝██║██╔══██╗██╔════╝╚══██╔══╝  ██╔══██╗██╔════╝██╔══██╗██╔════╝██╔══██╗████╗ ██║
-
-    █████╗  ██║██████╔╝╚█████╗    ██║     ██████╔╝█████╗  ██████╔╝╚█████╗ ██║  ██║██╔██╗██║
-
-    ██╔══╝  ██║██╔══██╗ ╚═══██╗   ██║     ██╔═══╝ ██╔══╝  ██╔══██╗ ╚═══██╗██║  ██║██║╚████║
-
-    ██║     ██║██║  ██║██████╔╝   ██║     ██║     ███████╗██║  ██║██████╔╝╚█████╔╝██║ ╚███║
-
-    ╚═╝     ╚═╝╚═╝  ╚═╝╚═════╝    ╚═╝     ╚═╝     ╚══════╝╚═╝  ╚═╝╚═════╝  ╚════╝ ╚═╝  ╚══╝
-
-
-
-     █████╗  █████╗ ███╗   ███╗███████╗██████╗  █████╗
-
-    ██╔══██╗██╔══██╗████╗ ████║██╔════╝██╔══██╗██╔══██╗
-
-    ██║  ╚═╝███████║██╔████╔██║█████╗  ██████╔╝███████║
-
-    ██║  ██╗██╔══██║██║╚██╔╝██║██╔══╝  ██╔══██╗██╔══██║
-
-    ╚█████╔╝██║  ██║██║ ╚═╝ ██║███████╗██║  ██║██║  ██║
-
-     ╚════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝
-
-
-
-     █████╗  █████╗ ███╗  ██╗████████╗██████╗  █████╗ ██╗     ██╗     ███████╗██████╗
-
-    ██╔══██╗██╔══██╗████╗ ██║╚══██╔══╝██╔══██╗██╔══██╗██║     ██║     ██╔════╝██╔══██╗
-
-    ██║  ╚═╝██║  ██║██╔██╗██║   ██║   ██████╔╝██║  ██║██║     ██║     █████╗  ██████╔╝
-
-    ██║  ██╗██║  ██║██║╚████║   ██║   ██╔══██╗██║  ██║██║     ██║     ██╔══╝  ██╔══██╗
-
-    ╚█████╔╝╚█████╔╝██║ ╚███║   ██║   ██║  ██║╚█████╔╝███████╗███████╗███████╗██║  ██║
-
-     ╚════╝  ╚════╝ ╚═╝  ╚══╝   ╚═╝   ╚═╝  ╚═╝ ╚════╝ ╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝
-
-
-
-    █▄▄ █▄█   ▀█▀ █ █ █▀▀   █▀▄ █▀▀ █ █ █▀▀ █   █▀█ █▀█ █▀▀ █▀█
-
-    █▄█  █     █  █▀█ ██▄   █▄▀ ██▄ ▀▄▀ ██▄ █▄▄ █▄█ █▀▀ ██▄ █▀▄
-
-*/
-
-using System.Collections;
-
-using System.Collections.Generic;
-
-using UnityEngine;
-
-
-
-[RequireComponent(typeof(Camera))]
+﻿using UnityEngine;
 
 public class SFPSC_FPSCamera : MonoBehaviour
-
 {
+    public float sensitivity = 2.0f;
+    public Transform player;           // The Player Body
+    public Transform CameraPosition;   // Empty object at player's head
 
-    public static SFPSC_FPSCamera cam;
+    private float rotX = 0f;
+    private float rotY = 0f;
 
-    private Camera cam_;
-
-   
-
-    public float sensitivity = 3;
-
-    [HideInInspector]
-
-    public float mouseX, mouseY;
-
-    public float maxUpAngle = 80;
-
-    public float maxDownAngle = -80;
-
-    public Transform player;
-
-    public Transform CameraPosition;
-
-   
-
-    private void Awake()
-
+    void Start()
     {
-
-        cam = this;
-
-        cam_ = this.GetComponent<Camera>();
-
-
-
         Cursor.lockState = CursorLockMode.Locked;
-
         Cursor.visible = false;
-
     }
 
-   
-
-    private float rotX = 0.0f, rotY = 0.0f;
-
-    [HideInInspector]
-
-    public float rotZ = 0.0f;
-
-    private void LateUpdate()
-
+    void Update()
     {
+        // 1. Check if game is over
+        if (GunManager.isGameOver) return;
 
-        // Mouse input
-
-        mouseX = Input.GetAxis("Mouse X") * sensitivity;
-
-        mouseY = Input.GetAxis("Mouse Y") * sensitivity;
-
-
-
-        // Calculations
+        // 2. Mouse look
+        float mouseX = Input.GetAxis("Mouse X") * sensitivity;
+        float mouseY = Input.GetAxis("Mouse Y") * sensitivity;
 
         rotX -= mouseY;
-
-        rotX = Mathf.Clamp(rotX, maxDownAngle, maxUpAngle);
-
+        rotX = Mathf.Clamp(rotX, -80f, 80f);
         rotY += mouseX;
 
-
-
-        // Placing values
-
-        transform.localRotation = Quaternion.Euler(rotX, rotY, rotZ);
-
+        // Rotate camera up/down
+        transform.localRotation = Quaternion.Euler(rotX, rotY, 0f);
+        
+        // Rotate body left/right
         player.Rotate(Vector3.up * mouseX);
+    }
 
+    void LateUpdate()
+    {
+        // 3. Glue camera to the player's head
         transform.position = CameraPosition.position;
-
     }
-
-
-
-    /*public void Shake(float magnitude, float duration)
-
-    {
-
-        StartCoroutine(IShake(magnitude, duration));
-
-    }
-
-
-
-    private IEnumerator IShake(float mag, float dur)
-
-    {
-
-        WaitForEndOfFrame wfeof = new WaitForEndOfFrame();
-
-        for(float t = 0.0f; t <= dur; t += Time.deltaTime)
-
-        {
-
-            rotZ = Random.Range(-mag, mag) * (t / dur - 1.0f);
-
-            yield return wfeof;
-
-        }
-
-        rotZ = 0.0f;
-
-    }*/
-
 }
