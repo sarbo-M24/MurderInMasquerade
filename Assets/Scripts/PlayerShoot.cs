@@ -32,16 +32,33 @@ public class PlayerShoot : MonoBehaviour
         Vector3 hitPoint;
 
         if (Physics.Raycast(fpsCam.transform.position, fpsCam.transform.forward, out hit, range))
+    {
+        hitPoint = hit.point;
+
+        // CHECK TAG: Did we hit the Imposter?
+        if (hit.transform.CompareTag("Imposter"))
         {
-            hitPoint = hit.point;
+            Debug.Log("Hit the Imposter! You Win.");
+            GunManager.instance.WinGame();
+            
+            // Still deal damage if needed
             Target enemy = hit.transform.GetComponent<Target>();
             if (enemy != null) enemy.TakeDamage(damage);
         }
         else
         {
-            hitPoint = fpsCam.transform.position + (fpsCam.transform.forward * range);
+            // Hit something else (Wall, Floor, wrong person)
+            Debug.Log("Hit the wrong target! You Lose.");
+            GunManager.instance.GameOver();
         }
-
+    }
+    else
+    {
+        // Hit the Sky/Nothing
+        hitPoint = fpsCam.transform.position + (fpsCam.transform.forward * range);
+        Debug.Log("Missed completely! You Lose.");
+        GunManager.instance.GameOver();
+    }
         SpawnTracer(hitPoint);
     }
 
