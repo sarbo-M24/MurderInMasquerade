@@ -8,6 +8,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Environment.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/Scenes/Shooting.unity
+    guid: b204b9affa6e6fe45a443f55e2640c8d
+  - enabled: 1
+    path: Assets/Scenes/Lose.unity
+    guid: ad142abb33508a04592f528cac1244d3
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

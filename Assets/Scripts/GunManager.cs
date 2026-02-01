@@ -151,13 +151,14 @@ public class GunManager : MonoBehaviour
     {
         isGameOver = true; // Trigger the freeze
         StopAllMusic(); // Stops the loops
-        losePanel.SetActive(true); // Show the whole panel (text + button)
+        //losePanel.SetActive(true); // Show the whole panel (text + button)
         timerActive = false;
-        loseMessage.SetActive(true);
+        //loseMessage.SetActive(true);
         // Unlock cursor so player can click a restart button if you add one
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         Time.timeScale = 0; // Freeze the game
+        SceneManager.LoadScene("Lose");
         Debug.Log("Time's up! You Lose.");
     }
 
