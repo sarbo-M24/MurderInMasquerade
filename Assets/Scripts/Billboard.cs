@@ -33,8 +33,8 @@ public class BillboardFX : MonoBehaviour
         if (directionToPlayer != Vector3.zero)
         {
             // Create the rotation looking at the player
-            Quaternion lookRotation = Quaternion.LookRotation(directionToPlayer);
-            
+            Quaternion lookRotation = Quaternion.LookRotation(-directionToPlayer);
+
             // Apply it
             transform.rotation = lookRotation;
         }
