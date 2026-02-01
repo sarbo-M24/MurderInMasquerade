@@ -24,9 +24,7 @@ Material:
   m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
   m_Parent: {fileID: 2100000, guid: 78b209d1cd666fe498c5a72d8c97735d, type: 2}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
-  - _NORMALMAP
-  - _OCCLUSIONMAP
+  m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -41,19 +39,19 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: d1e5e1e6f9a98fb4da42d6d1bbcd9c4d, type: 3}
-        m_Scale: {x: 0.06, y: 0.15}
+        m_Texture: {fileID: 2800000, guid: 1f0eabde23348764885e9a1121367ca2, type: 3}
+        m_Scale: {x: 0.12, y: 0.15}
         m_Offset: {x: 0, y: -0.07}
     - _BumpMap:
-        m_Texture: {fileID: 2800000, guid: 784452dbfdaa0894e98f70db9dd361da, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: d1e5e1e6f9a98fb4da42d6d1bbcd9c4d, type: 3}
-        m_Scale: {x: 0.06, y: 0.15}
+        m_Texture: {fileID: 2800000, guid: 1f0eabde23348764885e9a1121367ca2, type: 3}
+        m_Scale: {x: 0.12, y: 0.15}
         m_Offset: {x: 0, y: -0.07}
     - _OcclusionMap:
-        m_Texture: {fileID: 2800000, guid: 51479aa62d17c18448ad49c8401a157b, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ParallaxMap:
@@ -62,8 +60,11 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _OcclusionStrength: 0.43
+    - _BumpScale: 0
+    - _OcclusionStrength: 0
     - _Smoothness: 0
-    m_Colors: []
+    m_Colors:
+    - _BaseColor: {r: 0.5396226, g: 0.5396226, b: 0.5396226, a: 1}
+    - _Color: {r: 0.5396226, g: 0.5396226, b: 0.5396226, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
