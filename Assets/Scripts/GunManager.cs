@@ -19,7 +19,7 @@ public class GunManager : MonoBehaviour
     public GameObject gunUIElement;
     public GameObject crosshairUI;
     public Image timerCircle;      // Drag your TimerCircle Image here
-    public GameObject loseMessage; // Drag your LoseText GameObject here
+     // Drag your LoseText GameObject here
 
     [Header("Audio References")]
     public AudioSource mainLoopSource;
@@ -40,30 +40,64 @@ public class GunManager : MonoBehaviour
     void Awake()
     {
         if (instance == null) instance = this;
-        isGameOver = false; // Reset on every restart
-        // Hide everything at start
-        Time.timeScale = 1; // Ensure time is moving when the scene starts
-        losePanel.SetActive(false);
-        gunUIElement.SetActive(false);
-        crosshairUI.SetActive(false);
-        timerCircle.gameObject.SetActive(false);
-        loseMessage.SetActive(false);
+        isGameOver = false;
+        Time.timeScale = 1;
+
+        // Add null checks for everything
+        if (losePanel != null)
+            losePanel.SetActive(false);
+        else
+            Debug.LogWarning("losePanel not assigned!");
+
+        if (winPanel != null)
+            winPanel.SetActive(false);
+        else
+            Debug.LogWarning("winPanel not assigned!");
+
+        if (gunUIElement != null)
+            gunUIElement.SetActive(false);
+        else
+            Debug.LogWarning("gunUIElement not assigned!");
+
+        if (crosshairUI != null)
+            crosshairUI.SetActive(false);
+        else
+            Debug.LogWarning("crosshairUI not assigned!");
+
+        if (timerCircle != null)
+            timerCircle.gameObject.SetActive(false);
+        else
+            Debug.LogWarning("timerCircle not assigned!");
+
+       
     }
+
 
     void Update()
     {
+        // DIAGNOSTIC: Check if time is actually moving
+        Debug.Log($"Time.deltaTime: {Time.deltaTime} | Time.timeScale: {Time.timeScale}");
+
         if (timerActive && !hasFired)
         {
+            Debug.Log($"Timer Active! Current time: {currentTime}");
+
             if (currentTime > 0)
             {
                 currentTime -= Time.deltaTime;
-                // Update the circle fill (value between 0 and 1)
                 timerCircle.fillAmount = currentTime / timeLimit;
+
+                Debug.Log($"After decrement: {currentTime} | Fill: {timerCircle.fillAmount}");
             }
             else
             {
+                Debug.Log("Timer hit zero, calling GameOver");
                 GameOver();
             }
+        }
+        else
+        {
+            Debug.Log($"Timer not active. timerActive={timerActive}, hasFired={hasFired}");
         }
     }
 
@@ -71,19 +105,22 @@ public class GunManager : MonoBehaviour
     {
         partsCollected++;
 
-        Debug.Log("Collected part " + partsCollected + "/4");
+        Debug.Log("Collected part " + partsCollected + "/" + totalPartsRequired);
 
         // NEW CONDITION: Trigger event at 3 parts
         if (partsCollected == 3 && !hasTriggeredPhaseTwo)
         {
+            Debug.Log("Triggering Phase Two at 3 parts");
             TriggerPhaseTwo();
         }
 
         if (partsCollected >= totalPartsRequired)
         {
+            Debug.Log("All parts collected! Starting timer...");
             StartTimer();
         }
     }
+
 
     void TriggerPhaseTwo()
     {
@@ -118,6 +155,11 @@ public class GunManager : MonoBehaviour
 
     void StartTimer()
     {
+        Debug.Log("StartTimer() called!");
+        Debug.Log("Gun UI Element: " + (gunUIElement != null ? "Assigned" : "NULL"));
+        Debug.Log("Crosshair UI: " + (crosshairUI != null ? "Assigned" : "NULL"));
+        Debug.Log("Timer Circle: " + (timerCircle != null ? "Assigned" : "NULL"));
+
         isGunComplete = true;
         timerActive = true;
         currentTime = timeLimit;
@@ -125,9 +167,22 @@ public class GunManager : MonoBehaviour
         // Start the crossfade logic
         StartCoroutine(CrossfadeMusic());
 
-        gunUIElement.SetActive(true);
-        crosshairUI.SetActive(true);
-        timerCircle.gameObject.SetActive(true);
+        if (gunUIElement != null)
+            gunUIElement.SetActive(true);
+        else
+            Debug.LogError("gunUIElement is NULL!");
+
+        if (crosshairUI != null)
+            crosshairUI.SetActive(true);
+        else
+            Debug.LogError("crosshairUI is NULL!");
+
+        if (timerCircle != null)
+            timerCircle.gameObject.SetActive(true);
+        else
+            Debug.LogError("timerCircle is NULL!");
+
+        Debug.Log("Timer is now active: " + timerActive);
     }
 
     IEnumerator CrossfadeMusic()
@@ -162,16 +217,21 @@ public class GunManager : MonoBehaviour
     {
         isGameOver = true; // Trigger the freeze
         StopAllMusic(); // Stops the loops
-        //losePanel.SetActive(true); // Show the whole panel (text + button)
         timerActive = false;
-        //loseMessage.SetActive(true);
-        // Unlock cursor so player can click a restart button if you add one
+
+        // Unlock cursor so player can interact
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-        Time.timeScale = 0; // Freeze the game
+
+        // DON'T set Time.timeScale to 0 before loading scene
+        // Time.timeScale = 0; // REMOVE THIS LINE
+
+        // Load the lose scene - timeScale will reset automatically
         SceneManager.LoadScene("Lose");
+
         Debug.Log("Time's up! You Lose.");
     }
+
 
     public void RetryGame()
     {
@@ -180,15 +240,30 @@ public class GunManager : MonoBehaviour
     }
 
     public void WinGame()
-{
-    isGameOver = true;
-    StopAllMusic(); // Stops the loops
-    winPanel.SetActive(true);
-    
-    Cursor.lockState = CursorLockMode.None;
-    Cursor.visible = true;
+    {
+        isGameOver = true;
+        StopAllMusic(); // Stops the loops
 
-    Time.timeScale = 0; // Freeze the world
-}
-    
+        if (winPanel != null)
+            winPanel.SetActive(true);
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        // Wait 2 seconds then go to main menu
+        StartCoroutine(LoadMainMenuAfterDelay(2f));
+    }
+
+    IEnumerator LoadMainMenuAfterDelay(float delay)
+    {
+        Debug.Log($"You Win! Returning to menu in {delay} seconds...");
+
+        // Wait for specified time
+        yield return new WaitForSeconds(delay);
+
+        Debug.Log("Loading main menu...");
+        SceneManager.LoadScene("MainMenu");
+    }
+
+
 }

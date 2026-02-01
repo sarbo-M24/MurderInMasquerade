@@ -26,6 +26,20 @@ public class ImposterController : MonoBehaviour
         {
             Debug.LogError("Imposter needs a Renderer to detect visibility!");
         }
+
+        // Register with GunManager
+        if (GunManager.instance != null)
+        {
+            SpriteRenderer spriteRend = GetComponentInChildren<SpriteRenderer>();
+            if (spriteRend != null)
+            {
+                GunManager.instance.imposterRenderer = spriteRend;
+            }
+            else
+            {
+                Debug.LogWarning("Imposter has no SpriteRenderer!");
+            }
+        }
     }
 
     void Update()
